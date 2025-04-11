@@ -12,6 +12,7 @@ func cleanInput(text string) []string {
 }
 
 func main() {
+	initCommands()
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
@@ -28,8 +29,15 @@ func main() {
 			continue
 		}
 
-		cmd := cleaned[0]
+		cmd, ok := commands[cleaned[0]]
+		if !ok {
+			fmt.Println("Unknown command")
+			continue
+		}
 
-		fmt.Printf("Your command was: %s\n", cmd)
+		err := cmd.callback()
+		if err != nil {
+			fmt.Println("Error:", err)
+		}
 	}
 }
