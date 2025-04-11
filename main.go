@@ -15,6 +15,8 @@ func main() {
 	initCommands()
 	scanner := bufio.NewScanner(os.Stdin)
 
+	var cfg *config
+
 	for {
 		fmt.Print("Pokedex > ")
 		hasInput := scanner.Scan()
@@ -35,7 +37,12 @@ func main() {
 			continue
 		}
 
-		err := cmd.callback()
+		if cfg == nil && cmd.defaultConfig != (config{}) {
+			newConfig := cmd.defaultConfig
+			cfg = &newConfig
+		}
+
+		err := cmd.callback(cfg)
 		if err != nil {
 			fmt.Println("Error:", err)
 		}
