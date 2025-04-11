@@ -14,7 +14,7 @@ type config struct {
 type cliCommand struct {
 	name          string
 	description   string
-	callback      func(*config) error
+	callback      func(*config, ...string) error
 	defaultConfig config
 }
 
@@ -50,17 +50,22 @@ func initCommands() {
 				previous: "https://pokeapi.co/api/v2/location-area/",
 			},
 		},
+		"explore": {
+			name:        "explore [location-name]",
+			description: "Lists the pokemon you can find at a given location",
+			callback:    commandExplore,
+		},
 	}
 }
 
-func commandExit(*config) error {
+func commandExit(*config, ...string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 
 	return nil
 }
 
-func commandHelp(*config) error {
+func commandHelp(*config, ...string) error {
 	fmt.Println("Welcome to the Pokedex!\nUsage:")
 	fmt.Println()
 
@@ -71,7 +76,7 @@ func commandHelp(*config) error {
 	return nil
 }
 
-func commandMap(cfg *config) error {
+func commandMap(cfg *config, args ...string) error {
 	areas, next, previous, err := pokeutils.GetLocationAreas(cfg.next)
 	if err != nil {
 		return err
@@ -87,7 +92,7 @@ func commandMap(cfg *config) error {
 	return nil
 }
 
-func commandMapb(cfg *config) error {
+func commandMapb(cfg *config, args ...string) error {
 	if cfg.previous == "" {
 		fmt.Println("you're on the first page")
 		return nil
@@ -103,6 +108,30 @@ func commandMapb(cfg *config) error {
 
 	for _, area := range areas {
 		fmt.Println(area)
+	}
+
+	return nil
+}
+
+func commandExplore(_ *config, args ...string) error {
+	if len(args) == 0 {
+		fmt.Println("You need to specify a location.")
+		return nil
+	}
+
+	area, err := pokeutils.GetLocationArea(args[0])
+	if err != nil {
+		return err
+	}
+
+	if len(area.Pokemon_Encounters) == 0 {
+		fmt.Println("No pokemon were found for that location.")
+		return nil
+	}
+
+	fmt.Println("Found Pokemon:")
+	for _, encounter := range area.Pokemon_Encounters {
+		fmt.Println(" - ", encounter.Pokemon.Name)
 	}
 
 	return nil

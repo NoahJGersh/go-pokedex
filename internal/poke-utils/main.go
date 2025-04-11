@@ -15,11 +15,18 @@ type namedAPIResource struct {
 	Url  string `json:"url"`
 }
 
+type pokemonEncounter struct {
+	Pokemon namedAPIResource `json:"pokemon"`
+}
+
 type locationAreasBody struct {
-	Count    int                `json:"count"`
 	Next     string             `json:"next"`
 	Previous string             `json:"previous"`
 	Results  []namedAPIResource `json:"results"`
+}
+
+type locationAreaBody struct {
+	Pokemon_Encounters []pokemonEncounter `json:"pokemon_encounters"`
 }
 
 func GetLocationAreas(url string) (locationAreas []string, next, previous string, err error) {
@@ -56,4 +63,36 @@ func GetLocationAreas(url string) (locationAreas []string, next, previous string
 	}
 
 	return areaNames, areas.Next, areas.Previous, nil
+}
+
+func GetLocationArea(name string) (locationAreaBody, error) {
+	url := "https://pokeapi.co/api/v2/location-area/" + name
+
+	body, ok := pokeapiCache.Get(url)
+	if !ok {
+		res, err := http.Get(url)
+		if err != nil {
+			return locationAreaBody{}, fmt.Errorf("no response from API: %w", err)
+		}
+		defer res.Body.Close()
+
+		body, err = io.ReadAll(res.Body)
+		if err != nil {
+			return locationAreaBody{}, fmt.Errorf("could not read response body: %w", err)
+		}
+
+		if res.StatusCode > 299 {
+			return locationAreaBody{}, fmt.Errorf("response failed with status code: %d and\nbody: %s", res.StatusCode, body)
+		}
+
+		pokeapiCache.Add(url, body)
+	}
+
+	area := locationAreaBody{}
+	err := json.Unmarshal(body, &area)
+	if err != nil {
+		return locationAreaBody{}, fmt.Errorf("could not unmarshal body: %w", err)
+	}
+
+	return area, nil
 }

@@ -42,7 +42,12 @@ func main() {
 			cfg = &newConfig
 		}
 
-		err := cmd.callback(cfg)
+		args := []string{}
+		if len(cleaned) > 1 {
+			args = cleaned[1:]
+		}
+
+		err := cmd.callback(cfg, args...)
 		if err != nil {
 			fmt.Println("Error:", err)
 		}
