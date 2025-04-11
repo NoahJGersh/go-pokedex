@@ -4,8 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	pokeutils "poke-utils"
 	"strings"
 )
+
+var pokedex = make(map[string]pokeutils.Pokemon)
 
 func cleanInput(text string) []string {
 	return strings.Fields(strings.ToLower(text))
