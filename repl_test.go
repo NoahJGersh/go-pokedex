@@ -25,6 +25,10 @@ func TestCleanInput(t *testing.T) {
 			input:    "new\n  line",
 			expected: []string{"new", "line"},
 		},
+		{
+			input:    "",
+			expected: []string{},
+		},
 	}
 
 	for _, c := range cases {
