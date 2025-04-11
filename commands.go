@@ -34,11 +34,20 @@ func initCommands() {
 		},
 		"map": {
 			name:        "map",
-			description: "Displays the names of locations in the world",
+			description: "Displays the names of the next 20 locations in the world",
 			callback:    commandMap,
 			defaultConfig: config{
 				next:     "https://pokeapi.co/api/v2/location-area/",
 				previous: "",
+			},
+		},
+		"mapb": {
+			name:        "mapb",
+			description: "Displays the names of the previous 20 locations in the world",
+			callback:    commandMapb,
+			defaultConfig: config{
+				next:     "",
+				previous: "https://pokeapi.co/api/v2/location-area/",
 			},
 		},
 	}
@@ -63,13 +72,34 @@ func commandHelp(*config) error {
 }
 
 func commandMap(cfg *config) error {
-	areas, next, _, err := pokeutils.GetLocationAreas(cfg.next)
+	areas, next, previous, err := pokeutils.GetLocationAreas(cfg.next)
 	if err != nil {
 		return err
 	}
 
-	cfg.previous = cfg.next
+	cfg.previous = previous
 	cfg.next = next
+
+	for _, area := range areas {
+		fmt.Println(area)
+	}
+
+	return nil
+}
+
+func commandMapb(cfg *config) error {
+	if cfg.previous == "" {
+		fmt.Println("you're on the first page")
+		return nil
+	}
+
+	areas, next, previous, err := pokeutils.GetLocationAreas(cfg.previous)
+	if err != nil {
+		return err
+	}
+
+	cfg.next = next
+	cfg.previous = previous
 
 	for _, area := range areas {
 		fmt.Println(area)
