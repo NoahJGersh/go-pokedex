@@ -40,6 +40,7 @@ func TestCleanInput(t *testing.T) {
 				len(actual),
 				len(c.expected),
 			)
+			return
 		}
 
 		for i := range actual {
@@ -52,6 +53,7 @@ func TestCleanInput(t *testing.T) {
 					word,
 					expectedWord,
 				)
+				return
 			}
 		}
 	}

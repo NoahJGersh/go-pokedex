@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
+
+var pokeapiCache = NewCache(5 * time.Second)
 
 type namedAPIResource struct {
 	Name string `json:"name"`
@@ -20,19 +23,25 @@ type locationAreasBody struct {
 }
 
 func GetLocationAreas(url string) (locationAreas []string, next, previous string, err error) {
-	res, err := http.Get(url)
-	if err != nil {
-		return []string{}, "", "", fmt.Errorf("no response from API: %w", err)
-	}
-	defer res.Body.Close()
+	body, ok := pokeapiCache.Get(url)
 
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return []string{}, "", "", fmt.Errorf("could not read response body: %w", err)
-	}
+	if !ok {
+		res, err := http.Get(url)
+		if err != nil {
+			return []string{}, "", "", fmt.Errorf("no response from API: %w", err)
+		}
+		defer res.Body.Close()
 
-	if res.StatusCode > 299 {
-		return []string{}, "", "", fmt.Errorf("response failed with status code: %d and\nbody: %s", res.StatusCode, body)
+		body, err = io.ReadAll(res.Body)
+		if err != nil {
+			return []string{}, "", "", fmt.Errorf("could not read response body: %w", err)
+		}
+
+		if res.StatusCode > 299 {
+			return []string{}, "", "", fmt.Errorf("response failed with status code: %d and\nbody: %s", res.StatusCode, body)
+		}
+
+		pokeapiCache.Add(url, body)
 	}
 
 	areas := locationAreasBody{}
